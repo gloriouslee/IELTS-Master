@@ -1,0 +1,5 @@
+ALTER TABLE public.essays ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft', ADD COLUMN IF NOT EXISTS word_count INTEGER NOT NULL DEFAULT 0, ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMPTZ;
+ALTER TABLE public.essay_feedback ADD COLUMN IF NOT EXISTS paragraph_feedback JSONB NOT NULL DEFAULT '[]', ADD COLUMN IF NOT EXISTS checklist JSONB NOT NULL DEFAULT '[]', ADD COLUMN IF NOT EXISTS band_rationale TEXT, ADD COLUMN IF NOT EXISTS focus_criterion TEXT;
+CREATE TABLE IF NOT EXISTS public.essay_revisions (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), essay_id UUID NOT NULL REFERENCES public.essays(id) ON DELETE CASCADE, parent_revision_id UUID REFERENCES public.essay_revisions(id), version_number INTEGER NOT NULL, content TEXT NOT NULL, word_count INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'draft', created_at TIMESTAMPTZ NOT NULL DEFAULT now(), submitted_at TIMESTAMPTZ, UNIQUE(essay_id,version_number));
+ALTER TABLE public.essay_revisions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Own essay revisions" ON public.essay_revisions FOR ALL USING (EXISTS (SELECT 1 FROM public.essays e WHERE e.id=essay_id AND e.user_id=auth.uid()));

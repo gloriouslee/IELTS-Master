@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# IELTS Master
 
-## Getting Started
+IELTS learning workspace built with Next.js 16, React 19 and Supabase. It includes onboarding, daily plans, vocabulary SRS, Writing and Speaking evaluations, an AI tutor, mock tests and verified progress analytics.
 
-First, run the development server:
+## Local setup
+
+1. Copy `.env.example` to `.env.local` and fill in Supabase credentials.
+2. Apply every migration in `supabase/migrations` to the Supabase project.
+3. Add `OPENAI_API_KEY` for speech transcription and either `DEEPSEEK_API_KEY` or `OPENAI_API_KEY` for grading.
+4. Install and start:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without Supabase credentials the app enters an explicit local demo mode. Demo data is stored in the browser and is not synchronized. Production analytics and verified XP require Supabase.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Security model
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Server Actions verify the Supabase user before paid AI calls.
+- AI quota and XP awards are enforced by database functions.
+- Profiles are private; system progress cannot be written directly by browser clients.
+- User-provided DeepSeek keys are kept in `sessionStorage`, not persistent storage.
+- AI responses are range-checked and normalized to IELTS half bands.
+- Audio is transcribed but not retained. Pronunciation is deliberately not scored without audio analysis.
 
-## Learn More
+## Quality checks
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run check
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This runs ESLint, strict TypeScript checking and a production build. Database changes should be tested against a disposable Supabase project before deployment.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## CI/CD
 
-## Deploy on Vercel
+GitHub Actions runs `npm run check` for every pull request and push to `main` or `master`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Production deployment uses Vercel after a push to either branch, or when started manually. Add these repository secrets in GitHub before deploying:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```text
+VERCEL_TOKEN
+VERCEL_ORG_ID
+VERCEL_PROJECT_ID
+```
